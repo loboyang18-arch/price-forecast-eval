@@ -37,6 +37,12 @@ def build_parser() -> argparse.ArgumentParser:
     eval_p.add_argument("--baseline", type=Path, default=None, help="naive summary.csv")
     eval_p.add_argument("--baseline-task", default="da")
     eval_p.add_argument("--baseline-variant", default="lag24h")
+    eval_p.add_argument(
+        "--auto-baseline",
+        choices=("lag24h",),
+        default=None,
+        help="自动从 CSV 的 actual 列构造基线（当前支持 lag24h）",
+    )
     eval_p.add_argument("--no-extended", action="store_true")
     eval_p.add_argument("--with-scenario-tags", action="store_true")
     eval_p.add_argument(
@@ -67,6 +73,12 @@ def build_parser() -> argparse.ArgumentParser:
     run_p.add_argument("--baseline", type=Path, default=None)
     run_p.add_argument("--baseline-task", default="da")
     run_p.add_argument("--baseline-variant", default="lag24h")
+    run_p.add_argument(
+        "--auto-baseline",
+        choices=("lag24h",),
+        default=None,
+        help="自动从 CSV 的 actual 列构造基线（当前支持 lag24h）",
+    )
     run_p.add_argument("--no-extended", action="store_true")
     run_p.add_argument("--with-scenario-tags", action="store_true")
     run_p.add_argument("--segment-cols", default=None)
@@ -94,6 +106,7 @@ def _run_eval(args) -> Path:
         baseline_path=args.baseline,
         baseline_task=args.baseline_task,
         baseline_variant=args.baseline_variant,
+        auto_baseline=args.auto_baseline,
         with_scenario_tags=bool(args.with_scenario_tags),
         segment_cols=seg_cols,
     )

@@ -86,6 +86,11 @@ run_standard_visualization(
 price-forecast-eval eval output/experiments/v16d_default/da_result.csv \
   --task da --with-scenario-tags --out output/experiments/v16d_default/metrics.json
 
+# 评估 + 自动基线（从 actual 计算 lag24h baseline，并输出 composite）
+price-forecast-eval eval output/experiments/v16d_default/da_result.csv \
+  --task da --with-scenario-tags --auto-baseline lag24h \
+  --out output/experiments/v16d_default/metrics_auto_baseline.json
+
 # 可视化
 price-forecast-eval viz output/experiments/v16d_default/da_result.csv \
   --label V16d --out-dir output/experiments/v16d_default/plots
@@ -106,7 +111,12 @@ price-forecast-eval run output/experiments/v16d_default/da_result.csv \
 - `--out`：输出 JSON 路径（默认同目录 `metrics.json`）
 - `--with-scenario-tags`：自动打附录场景标签
 - `--segment-cols`：分场景列，逗号分隔
-- `--baseline` / `--baseline-task` / `--baseline-variant`：基线输入（用于 composite）
+- `--baseline` / `--baseline-task` / `--baseline-variant`：外部基线输入（用于 composite）
+- `--auto-baseline lag24h`：从当前 CSV 的 `actual` 自动构造 `t-24h` 基线并计算 composite
+
+说明：
+- 若同时提供 `--baseline` 与 `--auto-baseline`，优先使用 `--baseline`。
+- 未提供任一基线输入时，`composite` 会是 `null`。
 
 ### `viz`
 

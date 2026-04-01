@@ -5,6 +5,7 @@ import pandas as pd
 
 from price_forecast_eval.adapters import to_eval_frame
 from price_forecast_eval.evaluate import evaluate_model_predictions
+from price_forecast_eval.io import evaluate_predictions_csv
 from price_forecast_eval.scenario_tags import attach_scenario_tags
 from price_forecast_eval.shape_metrics import compute_shape_metrics
 from price_forecast_eval.validation import validate_eval_frame
@@ -137,3 +138,22 @@ def test_to_eval_frame_attach_tags():
     ef = to_eval_frame(idx, y, p, attach_tags=True)
     assert "tag_weekend" in ef.columns
     assert "tag_vol_class" in ef.columns
+
+
+def test_auto_baseline_lag24h_composite_not_null(tmp_path):
+    ts = pd.date_range("2026-01-01", periods=24 * 4, freq="h")
+    y = 300 + 20 * np.sin(np.arange(len(ts)) * 2 * np.pi / 24)
+    p = y + 2.0
+    csv_path = tmp_path / "pred.csv"
+    pd.DataFrame({"ts": ts, "actual": y, "predicted": p}).to_csv(csv_path, index=False)
+
+    ev = evaluate_predictions_csv(
+        csv_path,
+        actual_col="actual",
+        pred_col="predicted",
+        task_type="da",
+        auto_baseline="lag24h",
+        with_scenario_tags=False,
+    )
+    assert ev["composite"] is not None
+    assert "composite_score" in ev["composite"]
