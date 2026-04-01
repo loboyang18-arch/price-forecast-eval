@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "price-forecast-eval"
+version = "0.1.0"
+description = "Reusable toolkit for electricity price forecast evaluation and visualization."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Price Forecast Team" }]
+dependencies = [
+  "numpy>=1.23",
+  "pandas>=1.5",
+  "matplotlib>=3.6",
+]
+
+[project.scripts]
+price-forecast-eval = "price_forecast_eval.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["price_forecast_eval*"]
