@@ -49,20 +49,40 @@ ev = evaluate_model_predictions(df, task_type="da", include_extended=True)
 print(ev["point_metrics"])
 ```
 
-### 2) 从预测 CSV 评估并写 JSON
+### 2) 从预测 CSV 评估：自动 baseline + composite + 导出表格
 
 输入 CSV 需要含 `ts` 和预测列（默认 `actual/predicted`）。
 
 ```python
 from pathlib import Path
+import pandas as pd
 from price_forecast_eval import evaluate_predictions_csv, write_metrics_json
 
+exp_dir = Path("output/experiments/v16d_default")
+
 ev = evaluate_predictions_csv(
-    Path("output/experiments/v16d_default/da_result.csv"),
+    exp_dir / "da_result.csv",
     task_type="da",
     with_scenario_tags=True,
+    auto_baseline="lag24h",  # 自动从 actual 构造 baseline，用于计算 composite
 )
-write_metrics_json(ev, Path("output/experiments/v16d_default/metrics.json"))
+write_metrics_json(ev, exp_dir / "metrics.json")
+
+# 可选：额外导出一行汇总表，便于人工快速查看
+pm = ev.get("point_metrics") or {}
+sm = ev.get("shape_metrics") or {}
+co = ev.get("composite") or {}
+row = {
+    "experiment_id": "v16d_default",
+    "mae": pm.get("mae"),
+    "rmse": pm.get("rmse"),
+    "profile_corr": sm.get("profile_corr"),
+    "neg_corr_day_ratio": sm.get("neg_corr_day_ratio"),
+    "amplitude_err": sm.get("amplitude_err"),
+    "direction_acc": sm.get("direction_acc"),
+    "composite_score": co.get("composite_score") if co else None,
+}
+pd.DataFrame([row]).to_csv(exp_dir / "metrics_table.csv", index=False)
 ```
 
 ### 3) 绘图
@@ -131,4 +151,9 @@ price-forecast-eval run output/experiments/v16d_default/da_result.csv \
 
 ### `run`
 
-等价于先执行 `eval` 再执行 `viz`，参数是两者并集。
+`run` 是组合命令，等价于按顺序执行：
+
+1. `eval`（生成 `metrics.json`）
+2. `viz`（生成 `plots/` 图件）
+
+因此 `run` 可接收 `eval` 和 `viz` 的全部参数（两者并集），适合“一条命令跑完整评估流程”。
